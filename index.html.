@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Studysphere | Biology Learning Universe</title>
+
+  <link rel="stylesheet" href="./style.css">
+
+  <style>
+    /* ===== Original chapter-window styling (kept) ===== */
+    .chapter-window-content { max-width: 720px; }
+
+    #chapterSubject {
+      margin-top: -8px;
+      color: #66788c;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .chapter-action-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-top: 30px;
+    }
+
+    .chapter-action-grid button {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 5px;
+      padding: 20px;
+      border: 1px solid rgba(37, 99, 235, 0.12);
+      border-radius: 16px;
+      background: #f8fbff;
+      color: #102238;
+      text-align: left;
+      cursor: pointer;
+      transition: 0.25s ease;
+    }
+
+    .chapter-action-grid button:hover {
+      transform: translateY(-4px);
+      background: #eef6ff;
+      border-color: rgba(37, 99, 235, 0.25);
+      box-shadow: 0 12px 30px rgba(30, 80, 150, 0.08);
+    }
+
+    .chapter-action-grid button:first-child { font-size: 25px; }
+    .chapter-action-grid button span { font-size: 15px; font-weight: 800; }
+    .chapter-action-grid button small { color: #66788c; font-size: 12px; line-height: 1.4; }
+
+    .chapter-notice {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 13px;
+      background: rgba(36, 119, 255, 0.07);
+      color: #315477;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 600px) {
+      .chapter-action-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ===== 3D DNA HERO VISUAL (from earlier) ===== */
+    .biology-visual { position: relative; }
+
+    #dna3d-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    #dna3d-canvas canvas { display: block; width: 100%; height: 100%; }
+
+    .floating-item { position: relative; z-index: 3; }
+
+    /* ===== NEW: Class 11 / Class 12 selector on the homepage ===== */
+    .class-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 22px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .class-card {
+      position: relative;
+      padding: 30px 26px;
+      border-radius: 22px;
+      border: 1px solid rgba(37, 99, 235, 0.12);
+      background: linear-gradient(155deg, #ffffff 0%, #f4f9ff 100%);
+      box-shadow: 0 14px 34px rgba(20, 60, 120, 0.06);
+      cursor: pointer;
+      transition: 0.28s ease;
+      overflow: hidden;
+    }
+
+    .class-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(37, 99, 235, 0.3);
+      box-shadow: 0 20px 46px rgba(20, 60, 120, 0.12);
+    }
+
+    .class-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.1);
+      color: #2563eb;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      margin-bottom: 14px;
+    }
+
+    .class-card h3 { font-size: 21px; margin: 0 0 8px; color: #102238; }
+    .class-card p { color: #66788c; font-size: 13.5px; line-height: 1.5; margin: 0 0 16px; }
+
+    .class-subjects-preview {
+      display: flex;
+      gap: 10px;
+      font-size: 22px;
+      margin-bottom: 18px;
+    }
+
+    .class-card .go-btn {
+      border: none;
+      background: #2563eb;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 640px) {
+      .class-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ===== NEW: breadcrumb + back button used across modals ===== */
+    .crumb-nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #7c8ba1;
+      margin-bottom: 6px;
+    }
+
+    .crumb-nav .crumb-sep { color: #c3ceda; }
+    .crumb-nav .crumb-current { color: #2563eb; }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
+      background: rgba(37, 99, 235, 0.08);
+      color: #2563eb;
+      font-weight: 700;
+      font-size: 12.5px;
+      padding: 7px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 14px;
+    }
+
+    .back-btn:hover { background: rgba(37, 99, 235, 0.16); }
+
+    /* ===== NEW: 3D visualization slot inside chapter notes ===== */
+    .notes-viz-wrap {
+      margin: 22px 0;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(37, 99, 235, 0.12);
+      background: radial-gradient(circle at 30% 20%, rgba(37,99,235,0.08), transparent 60%), #0b1120;
+    }
+
+    .notes-viz-label {
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      color: #9fb4d8;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .notes-viz-canvas { width: 100%; height: 280px; }
+    .notes-viz-canvas canvas { width: 100%; height: 100%; display: block; }
+
+    /* ===== NEW: chapter list items (in case style.css doesn't already style these) ===== */
+    .chapter-list { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+
+    .chapter-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(37, 99, 235, 0.1);
+      background: #f8fbff;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .chapter-item:hover {
+      background: #eef6ff;
+      border-color: rgba(37, 99, 235, 0.25);
+      transform: translateX(4px);
+    }
+
+    .chapter-item-icon { font-size: 20px; }
+    .chapter-item-info { flex: 1; }
+    .chapter-item-info h4 { margin: 0 0 2px; font-size: 14.5px; color: #102238; }
+    .chapter-item-info p { margin: 0; font-size: 12px; color: #7c8ba1; }
+    .chapter-item-arrow { color: #2563eb; font-weight: 800; }
+  </style>
+
+</head>
+
+<body>
+
+  <!-- NAVIGATION -->
+  <header class="navbar">
+    <div class="logo">🌱 <span>Studysphere</span></div>
+    <nav>
+      <a href="#home">Home</a>
+      <a href="#notes">Notes</a>
+      <a href="#questions">Questions</a>
+      <a href="#ai">AI Tutor</a>
+      <a href="#about">About</a>
+    </nav>
+    <div class="search-box">
+      🔍
+      <input type="text" placeholder="Search biology topics...">
+    </div>
+  </header>
+
+  <main>
+
+    <!-- HERO -->
+    <section id="home" class="hero">
+      <div class="hero-content">
+        <div class="student-tag">🚀 Built by a Student, For Students</div>
+        <h1>Explore Biology.<span>Understand Life.</span>Ace NEET.</h1>
+        <p class="hero-description">
+          Your Biology Learning Universe — learn concepts,
+          practice questions, clear doubts and prepare smarter.
+        </p>
+        <div class="hero-buttons">
+          <a href="#notes" class="btn primary-btn">📚 Explore Notes</a>
+          <a href="#questions" class="btn secondary-btn">🧠 Practice Questions</a>
+        </div>
+      </div>
+
+      <div class="biology-visual">
+        <div class="glow"></div>
+        <div class="orbit orbit-one"></div>
+        <div class="orbit orbit-two"></div>
+        <div id="dna3d-canvas"></div>
+        <div class="floating-item item-one">🫀 Biology</div>
+        <div class="floating-item item-two">🔬 Learn</div>
+        <div class="floating-item item-three">🧠 NEET</div>
+      </div>
+    </section>
+
+    <!-- QUICK FEATURES -->
+    <section class="features">
+      <div class="feature-card">
+        <div class="feature-icon">📚</div>
+        <h3>Smart Notes</h3>
+        <p>Organized biology notes designed for easier learning.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <h3>Question Bank</h3>
+        <p>Practice biology questions and improve your preparation.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3>Lucky AI</h3>
+        <p>Get help when you are stuck on a difficult concept.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Test Yourself</h3>
+        <p>Take tests and track your learning progress.</p>
+      </div>
+    </section>
+
+    <!-- NOTES : CLASS SELECTOR -->
+    <section id="notes" class="section notes-section">
+      <div class="section-heading">
+        <div class="section-tag">📚 LEARN</div>
+        <h2>Explore Biology</h2>
+        <p>Pick your class to start learning.</p>
+      </div>
+
+      <div class="class-grid">
+        <div class="class-card" onclick="openClass(11)">
+          <div class="class-badge">CLASS 11</div>
+          <h3>NCERT Class 11 Biology</h3>
+          <p>Foundations across Botany, Zoology and Genetics.</p>
+          <div class="class-subjects-preview">🌿 🐾 🧬</div>
+          <button class="go-btn">Browse Class 11 →</button>
+        </div>
+
+        <div class="class-card" onclick="openClass(12)">
+          <div class="class-badge">CLASS 12</div>
+          <h3>NCERT Class 12 Biology</h3>
+          <p>Advanced concepts across Botany, Zoology and Genetics.</p>
+          <div class="class-subjects-preview">🌿 🐾 🧬</div>
+          <button class="go-btn">Browse Class 12 →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- QUESTIONS -->
+    <section id="questions" class="section questions-section">
+      <div class="section-heading">
+        <div class="section-tag">🧠 PRACTICE</div>
+        <h2>Test Your Knowledge</h2>
+        <p>Practice questions and find out how much you really know.</p>
+      </div>
+      <div class="question-preview">
+        <div class="question-number">QUESTION OF THE DAY</div>
+        <h3>Which organelle is known as the powerhouse of the cell?</h3>
+        <div class="options">
+          <button>A. Nucleus</button>
+          <button>B. Ribosome</button>
+          <button>C. Mitochondria</button>
+          <button>D. Golgi apparatus</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- AI TUTOR -->
+    <section id="ai" class="ai-section premium-ai">
+      <div class="ai-content">
+        <div class="section-tag">🤖 LUCKY AI</div>
+        <h2>Biology, <span>Explained.</span></h2>
+        <p>
+          Meet Lucky — your personal Biology learning assistant.
+          Ask questions, understand difficult concepts, and learn
+          smarter without endless memorization.
+        </p>
+        <div class="ai-features">
+          <span>🧬 Biology Focused</span>
+          <span>⚡ Instant Explanations</span>
+          <span>📚 Student Friendly</span>
+        </div>
+        <button class="btn primary-btn" onclick="openLuckyAI()">Talk to Lucky →</button>
+      </div>
+
+      <div class="ai-visual premium-visual">
+        <div class="ai-orb"></div>
+        <div class="lucky-window">
+          <div class="lucky-header">
+            <div class="lucky-profile">
+              <div class="lucky-avatar">🤖</div>
+              <div>
+                <h3>Lucky</h3>
+                <p><span class="online-dot"></span>Online</p>
+              </div>
+            </div>
+            <div class="lucky-menu">•••</div>
+          </div>
+          <div class="chat-preview">
+            <div class="message user-message">What is photosynthesis?</div>
+            <div class="message lucky-message">
+              <strong>Lucky</strong><br>
+              Photosynthesis is the process by which
+              green plants convert light energy into
+              chemical energy. 🌱
+            </div>
+            <div class="typing"><span></span><span></span><span></span></div>
+          </div>
+          <div class="chat-input">
+            <span>Ask Lucky anything...</span>
+            <button onclick="openLuckyAI()">↑</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="section about-section">
+      <div class="section-heading">
+        <div class="section-tag">🌎 ABOUT STUDYSPHERE</div>
+        <h2>Built for Students. Made for Learning.</h2>
+        <p>
+          Studysphere is a student-focused platform designed
+          to make Biology easier to understand, practice
+          and enjoy.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">Studysphere</div>
+    <p>Made with ❤️ by Luck Studios</p>
+    <p class="copyright">© 2026 Studysphere</p>
+  </footer>
+
+  <!-- ===== CLASS WINDOW (Class 11 / Class 12 -> 3 subjects) ===== -->
+  <div id="classWindow" class="subject-window">
+    <div class="subject-window-content">
+      <button class="close-subject" onclick="closeClass()">×</button>
+      <div class="crumb-nav" id="classCrumb"></div>
+      <div id="classIcon" class="subject-large-icon">📘</div>
+      <div class="section-tag">📚 BIOLOGY NOTES</div>
+      <h2 id="classTitle">Class 11</h2>
+      <p>Select a subject to see its chapters.</p>
+      <div class="subject-grid" id="classSubjectGrid"></div>
+    </div>
+  </div>
+
+  <!-- ===== SUBJECT WINDOW (chapters list) ===== -->
+  <div id="subjectWindow" class="subject-window">
+    <div class="subject-window-content">
+      <button class="close-subject" onclick="closeSubject()">×</button>
+      <button class="back-btn" onclick="backToClass()">← Back to Class</button>
+      <div class="crumb-nav" id="subjectCrumb"></div>
+      <div id="subjectIcon" class="subject-large-icon">🌱</div>
+      <div class="section-tag">📚 BIOLOGY NOTES</div>
+      <h2 id="subjectTitle">Botany</h2>
+      <p id="subjectDescription">Choose a chapter to begin learning.</p>
+      <div id="chapterList" class="chapter-list"><!-- populated by JS --></div>
+    </div>
+  </div>
+
+  <!-- ===== CHAPTER WINDOW (actions for one chapter) ===== -->
+  <div id="chapterWindow" class="subject-window">
+    <div class="subject-window-content chapter-window-content">
+      <button class="close-subject" onclick="closeChapter()">×</button>
+      <button class="back-btn" onclick="backToSubject()">← Back to Chapters</button>
+      <div class="crumb-nav" id="chapterCrumb"></div>
+      <div id="chapterIcon" class="subject-large-icon">📖</div>
+      <div class="section-tag">📚 CHAPTER</div>
+      <h2 id="chapterTitle">Chapter</h2>
+      <p id="chapterSubject">Biology</p>
+
+      <div class="chapter-action-grid">
+        <button onclick="openNotes()">📚<span>Notes</span><small>Learn the chapter</small></button>
+        <button onclick="chapterComingSoon('Important Concepts')">🧠<span>Important Concepts</span><small>Focus on key ideas</small></button>
+        <button onclick="chapterComingSoon('NEET Points')">🎯<span>NEET Points</span><small>Quick exam revision</small></button>
+        <button onclick="chapterComingSoon('Practice Questions')">❓<span>Practice Questions</span><small>Test your knowledge</small></button>
+      </div>
+
+      <div id="chapterNotice" class="chapter-notice">
+        🚀 This chapter is ready for content. We can add the actual notes next.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== NOTES READER (own page per chapter, dynamically filled) ===== -->
+  <div id="notesWindow" class="subject-window">
+    <div class="subject-window-content notes-window-content">
+      <button class="close-subject" onclick="closeNotes()">×</button>
+      <button class="back-btn" onclick="backToChapter()">← Back to Chapter</button>
+      <div class="crumb-nav" id="notesCrumb"></div>
+      <div class="subject-large-icon">📚</div>
+      <div class="section-tag">📖 STUDY NOTES</div>
+      <h2 id="notesTitle">Chapter Title</h2>
+      <p class="notes-subtitle" id="notesSubtitle">Biology • Class 11 • NCERT</p>
+
+      <!-- 3D visualization slot: only shown when a chapter defines one -->
+      <div id="notesVizWrap" class="notes-viz-wrap" style="display:none;">
+        <div class="notes-viz-label" id="notesVizLabel">🧬 INTERACTIVE 3D MODEL</div>
+        <div id="notesVizCanvas" class="notes-viz-canvas"></div>
+      </div>
+
+      <div id="notesContent" class="notes-content"><!-- populated by JS --></div>
+    </div>
+  </div>
+
+  <!-- ===== LUCKY AI CHAT ===== -->
+  <div id="luckyChat" class="lucky-chat">
+    <div class="lucky-chat-header">
+      <div class="lucky-chat-title">
+        <div class="lucky-small-avatar">🤖</div>
+        <div><h3>Lucky</h3><span>Biology AI Tutor</span></div>
+      </div>
+      <button class="close-lucky" onclick="closeLuckyAI()">×</button>
+    </div>
+    <div id="luckyMessages" class="lucky-messages">
+      <div class="chat-bubble lucky-bubble">
+        Hey! 👋 I'm Lucky.<br><br>
+        Ask me anything about Biology and I'll help you understand it. 🧬
+      </div>
+    </div>
+    <div class="lucky-input-area">
+      <input type="text" id="luckyInput" placeholder="Ask Lucky a Biology question..." onkeydown="handleLuckyKey(event)">
+      <button onclick="sendLuckyMessage()">↑</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       STUDYSPHERE DATA + NAVIGATION + 3D VIZ ENGINE
+       Everything below is modular on purpose:
+       - Add a chapter  -> add one object to STUDY_DATA[class][subject].chapters
+       - Add notes      -> fill a chapter's `notes` array with blocks
+       - Add a 3D model -> write one init function and register it in VIZ_REGISTRY
+       ============================================================ -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script>
+    /* =========================================================
+       1. DATA — edit/extend this to add real content
+       ========================================================= */
+    const SUBJECT_META = {
+      botany:   { label: 'Botany',   icon: '🌿' },
+      zoology:  { label: 'Zoology',  icon: '🐾' },
+      genetics: { label: 'Genetics', icon: '🧬' }
+    };
+
+    function ch(title, opts) {
+      opts = opts || {};
+      return { title, notes: opts.notes || null, viz: opts.viz || null };
+    }
+
+    const STUDY_DATA = {
+      11: {
+        botany: {
+          chapters: [
+            ch('The Living World'),
+            ch('Biological Classification'),
+            ch('Plant Kingdom'),
+            ch('Morphology of Flowering Plants'),
+            ch('Anatomy of Flowering Plants'),
+            ch('Cell: The Unit of Life', {
+              viz: 'cell',
+              notes: [
+                { type: 'card', title: '🌱 What is a Cell?', body:
+                  'The cell is the fundamental structural and functional unit of every living organism. Some organisms are single-celled, while others are complex, multicellular systems built from trillions of cooperating cells.' },
+                { type: 'important', title: '🎯 Important', body:
+                  'Every cell arises from a pre-existing cell — this is the Cell Theory, one of the unifying principles of biology.' },
+                { type: 'heading', text: '1. Prokaryotic vs Eukaryotic Cells' },
+                { type: 'card', title: '🧫 Prokaryotic Cells', body:
+                  'Lack a true, membrane-bound nucleus. DNA lies free in the cytoplasm in a region called the nucleoid. Bacteria are the classic example.' },
+                { type: 'card', title: '🧬 Eukaryotic Cells', body:
+                  'Have a well-defined nucleus enclosed by a nuclear envelope, along with membrane-bound organelles such as mitochondria, the endoplasmic reticulum and the Golgi apparatus.' },
+                { type: 'heading', text: '2. Key Organelles' },
+                { type: 'card', title: '⚡ Mitochondria', body:
+                  'Known as the "powerhouse of the cell" — the site of aerobic respiration and ATP generation.' },
+                { type: 'card', title: '🏭 Golgi Apparatus', body:
+                  'Modifies, packages and dispatches proteins and lipids received from the endoplasmic reticulum.' },
+                { type: 'hierarchy', text: 'Nucleus → Nucleolus → Chromatin → DNA' }
+              ]
+            }),
+            ch('Cell Cycle and Cell Division'),
+            ch('Photosynthesis in Higher Plants'),
+            ch('Respiration in Plants'),
+            ch('Plant Growth and Development')
+          ]
+        },
+        zoology: {
+          chapters: [
+            ch('Animal Kingdom'),
+            ch('Structural Organisation in Animals'),
+            ch('Biomolecules'),
+            ch('Digestion and Absorption'),
+            ch('Breathing and Exchange of Gases'),
+            ch('Body Fluids and Circulation'),
+            ch('Excretory Products and their Elimination'),
+            ch('Locomotion and Movement'),
+            ch('Neural Control and Coordination'),
+            ch('Chemical Coordination and Integration')
+          ]
+        },
+        genetics: {
+          chapters: [
+            ch('Introduction to Heredity'),
+            ch('Chromosomes and DNA'),
+            ch('Cell Division and Genetic Continuity'),
+            ch('Mendel and the Basics of Inheritance')
+          ]
+        }
+      },
+      12: {
+        botany: {
+          chapters: [
+            ch('Sexual Reproduction in Flowering Plants'),
+            ch('Microbes in Human Welfare'),
+            ch('Organisms and Populations'),
+            ch('Ecosystem'),
+            ch('Biodiversity and Conservation')
+          ]
+        },
+        zoology: {
+          chapters: [
+            ch('Human Reproduction'),
+            ch('Reproductive Health'),
+            ch('Human Health and Disease'),
+            ch('Strategies for Enhancement in Food Production')
+          ]
+        },
+        genetics: {
+          chapters: [
+            ch('Principles of Inheritance and Variation'),
+            ch('Molecular Basis of Inheritance', {
+              viz: 'dna',
+              notes: [
+                { type: 'card', title: '🧬 The Structure of DNA', body:
+                  'DNA is a double helix made of two antiparallel polynucleotide strands, held together by hydrogen bonds between complementary nitrogenous bases.' },
+                { type: 'important', title: '🎯 Important', body:
+                  'Adenine pairs with Thymine (2 hydrogen bonds); Guanine pairs with Cytosine (3 hydrogen bonds).' },
+                { type: 'heading', text: '1. Replication' },
+                { type: 'card', title: '🔁 Semi-conservative Replication', body:
+                  'Each strand of the parent DNA acts as a template for a new complementary strand, so every daughter molecule retains one old and one new strand.' },
+                { type: 'heading', text: '2. From Gene to Protein' },
+                { type: 'hierarchy', text: 'DNA → mRNA (Transcription) → Protein (Translation)' }
+              ]
+            }),
+            ch('Evolution'),
+            ch('Biotechnology: Principles and Processes')
+          ]
+        }
+      }
+    };
+
+    /* =========================================================
+       2. NAVIGATION STATE + WINDOW HELPERS
+       ========================================================= */
+    const nav = { classId: null, subjectKey: null, chapterIndex: null };
+
+    function show(id) { document.getElementById(id).classList.add('active'); }
+    function hide(id) { document.getElementById(id).classList.remove('active'); }
+
+    function crumb(el, parts) {
+      el.innerHTML = parts.map((p, i) => {
+        const isLast = i === parts.length - 1;
+        return `<span class="${isLast ? 'crumb-current' : ''}">${p}</span>` +
+               (isLast ? '' : '<span class="crumb-sep">›</span>');
+      }).join('');
+    }
+
+    // ---- Class window ----
+    function openClass(classId) {
+      nav.classId = classId;
+      document.getElementById('classTitle').textContent = 'Class ' + classId + ' Biology';
+      crumb(document.getElementById('classCrumb'), ['Studysphere', 'Class ' + classId]);
+
+      const grid = document.getElementById('classSubjectGrid');
+      grid.innerHTML = '';
+      Object.keys(SUBJECT_META).forEach(key => {
+        const meta = SUBJECT_META[key];
+        const count = (STUDY_DATA[classId][key] || { chapters: [] }).chapters.length;
+        const card = document.createElement('div');
+        card.className = 'subject-card';
+        card.innerHTML =
+          `<div class="subject-icon">${meta.icon}</div>
+           <h3>${meta.label}</h3>
+           <p>${count} chapters available to explore.</p>
+           <button>Explore →</button>`;
+        card.querySelector('button').onclick = () => openSubject(classId, key);
+        grid.appendChild(card);
+      });
+
+      show('classWindow');
+    }
+    function closeClass() { hide('classWindow'); }
+
+    // ---- Subject window (chapter list) ----
+    function openSubject(classId, subjectKey) {
+      nav.classId = classId;
+      nav.subjectKey = subjectKey;
+      const meta = SUBJECT_META[subjectKey];
+      const data = STUDY_DATA[classId][subjectKey];
+
+      document.getElementById('subjectIcon').textContent = meta.icon;
+      document.getElementById('subjectTitle').textContent = meta.label;
+      document.getElementById('subjectDescription').textContent =
+        `Class ${classId} • ${data.chapters.length} chapters`;
+      crumb(document.getElementById('subjectCrumb'),
+        ['Studysphere', 'Class ' + classId, meta.label]);
+
+      const list = document.getElementById('chapterList');
+      list.innerHTML = '';
+      data.chapters.forEach((chapter, index) => {
+        const item = document.createElement('div');
+        item.className = 'chapter-item';
+        item.innerHTML =
+          `<div class="chapter-item-icon">${chapter.viz ? '🧪' : '📖'}</div>
+           <div class="chapter-item-info">
+             <h4>${index + 1}. ${chapter.title}</h4>
+             <p>${chapter.notes ? 'Notes ready' : 'Coming soon'}${chapter.viz ? ' • 3D model' : ''}</p>
+           </div>
+           <span class="chapter-item-arrow">→</span>`;
+        item.onclick = () => openChapter(classId, subjectKey, index);
+        list.appendChild(item);
+      });
+
+      hide('classWindow');
+      show('subjectWindow');
+    }
+    function closeSubject() { hide('subjectWindow'); }
+    function backToClass() { hide('subjectWindow'); show('classWindow'); }
+
+    // ---- Chapter window (action grid) ----
+    function openChapter(classId, subjectKey, chapterIndex) {
+      nav.classId = classId;
+      nav.subjectKey = subjectKey;
+      nav.chapterIndex = chapterIndex;
+
+      const meta = SUBJECT_META[subjectKey];
+      const chapter = STUDY_DATA[classId][subjectKey].chapters[chapterIndex];
+
+      document.getElementById('chapterIcon').textContent = chapter.viz ? '🧪' : '📖';
+      document.getElementById('chapterTitle').textContent = chapter.title;
+      document.getElementById('chapterSubject').textContent = `${meta.label} • Class ${classId}`;
+      crumb(document.getElementById('chapterCrumb'),
+        ['Studysphere', 'Class ' + classId, meta.label, chapter.title]);
+
+      document.getElementById('chapterNotice').style.display = chapter.notes ? 'none' : 'block';
+
+      hide('subjectWindow');
+      show('chapterWindow');
+    }
+    function closeChapter() { hide('chapterWindow'); }
+    function backToSubject() {
+      hide('chapterWindow');
+      openSubject(nav.classId, nav.subjectKey);
+    }
+    function chapterComingSoon(feature) {
+      alert(feature + ' for this chapter is coming soon! 🚀');
+    }
+
+    /* =========================================================
+       3. NOTES RENDERER
+       ========================================================= */
+    function renderNotesBlocks(blocks) {
+      return blocks.map(b => {
+        if (b.type === 'heading') return `<h3>${b.text}</h3>`;
+        if (b.type === 'hierarchy') return `<div class="hierarchy-box">${b.text}</div>`;
+        if (b.type === 'important') {
+          return `<div class="important-box"><strong>${b.title}</strong><p>${b.body}</p></div>`;
+        }
+        return `<div class="notes-card"><strong>${b.title}</strong><p>${b.body}</p></div>`;
+      }).join('');
+    }
+
+    function openNotes() {
+      const { classId, subjectKey, chapterIndex } = nav;
+      const meta = SUBJECT_META[subjectKey];
+      const chapter = STUDY_DATA[classId][subjectKey].chapters[chapterIndex];
+
+      document.getElementById('notesTitle').textContent = chapter.title;
+      document.getElementById('notesSubtitle').textContent =
+        `${meta.label} • Class ${classId} • NCERT`;
+      crumb(document.getElementById('notesCrumb'),
+        ['Studysphere', 'Class ' + classId, meta.label, chapter.title, 'Notes']);
+
+      const content = document.getElementById('notesContent');
+      content.innerHTML = chapter.notes
+        ? renderNotesBlocks(chapter.notes)
+        : `<div class="chapter-notice">🚀 Notes for this chapter are coming soon — the page is already wired up, just add content to <code>STUDY_DATA</code>.</div>`;
+
+      const vizWrap = document.getElementById('notesVizWrap');
+      teardownActiveViz();
+      if (chapter.viz && VIZ_REGISTRY[chapter.viz]) {
+        vizWrap.style.display = 'block';
+        document.getElementById('notesVizLabel').textContent =
+          chapter.viz === 'dna' ? '🧬 INTERACTIVE 3D MODEL — DNA DOUBLE HELIX'
+                                 : '🧪 INTERACTIVE 3D MODEL — CELL STRUCTURE';
+        const mount = document.getElementById('notesVizCanvas');
+        mount.innerHTML = '';
+        activeVizCleanup = VIZ_REGISTRY[chapter.viz](mount);
+      } else {
+        vizWrap.style.display = 'none';
+      }
+
+      hide('chapterWindow');
+      show('notesWindow');
+    }
+    function closeNotes() { teardownActiveViz(); hide('notesWindow'); }
+    function backToChapter() {
+      teardownActiveViz();
+      hide('notesWindow');
+      openChapter(nav.classId, nav.subjectKey, nav.chapterIndex);
+    }
+
+    /* =========================================================
+       4. 3D VISUALIZATION ENGINE
+       Add a new model by writing an init(container) function that
+       returns a cleanup() function, then register it below.
+       ========================================================= */
+    let activeVizCleanup = null;
+    function teardownActiveViz() {
+      if (activeVizCleanup) { activeVizCleanup(); activeVizCleanup = null; }
+    }
+
+    function createBaseScene(container) {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+      const key = new THREE.DirectionalLight(0x66aaff, 1.1);
+      key.position.set(5, 6, 8);
+      scene.add(key);
+      const rim = new THREE.DirectionalLight(0x22e08a, 0.7);
+      rim.position.set(-6, -4, -6);
+      scene.add(rim);
+
+      function resize() {
+        const w = container.clientWidth, h = container.clientHeight;
+        if (!w || !h) return;
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      }
+      resize();
+      const ro = window.ResizeObserver ? new ResizeObserver(resize) : null;
+      if (ro) ro.observe(container);
+      window.addEventListener('resize', resize);
+
+      return { scene, camera, renderer, resize, ro };
+    }
+
+    function initDNAViz(container) {
+      const { scene, camera, renderer, ro } = createBaseScene(container);
+      camera.position.set(0, 0, 12);
+
+      const group = new THREE.Group();
+      scene.add(group);
+
+      const turns = 3, points = 40, radius = 1.3, height = 8;
+      const colorA = new THREE.Color(0x2563eb), colorB = new THREE.Color(0x22c55e);
+      const sphereGeo = new THREE.SphereGeometry(0.15, 14, 14);
+      const rungGeo = new THREE.CylinderGeometry(0.03, 0.03, 1, 8);
+      const matA = new THREE.MeshStandardMaterial({ color: colorA, emissive: colorA, emissiveIntensity: 0.25 });
+      const matB = new THREE.MeshStandardMaterial({ color: colorB, emissive: colorB, emissiveIntensity: 0.25 });
+      const matRung = new THREE.MeshStandardMaterial({ color: 0x7dd3fc, emissive: 0x7dd3fc, emissiveIntensity: 0.15, transparent: true, opacity: 0.85 });
+
+      for (let i = 0; i < points; i++) {
+        const t = i / (points - 1);
+        const angle = t * Math.PI * 2 * turns;
+        const y = (t - 0.5) * height;
+        const x1 = Math.cos(angle) * radius, z1 = Math.sin(angle) * radius;
+        const x2 = Math.cos(angle + Math.PI) * radius, z2 = Math.sin(angle + Math.PI) * radius;
+
+        const s1 = new THREE.Mesh(sphereGeo, matA); s1.position.set(x1, y, z1); group.add(s1);
+        const s2 = new THREE.Mesh(sphereGeo, matB); s2.position.set(x2, y, z2); group.add(s2);
+
+        if (i % 3 === 0) {
+          const len = Math.hypot(x2 - x1, z2 - z1);
+          const rung = new THREE.Mesh(rungGeo, matRung);
+          rung.scale.y = len;
+          rung.position.set((x1 + x2) / 2, y, (z1 + z2) / 2);
+          rung.lookAt(new THREE.Vector3(x2, y, z2));
+          rung.rotateX(Math.PI / 2);
+          group.add(rung);
+        }
+      }
+
+      let raf, t = 0;
+      function animate() {
+        raf = requestAnimationFrame(animate);
+        t += 0.006;
+        group.rotation.y = t;
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      return function cleanup() {
+        cancelAnimationFrame(raf);
+        if (ro) ro.disconnect();
+        renderer.dispose();
+        container.innerHTML = '';
+      };
+    }
+
+    function initCellViz(container) {
+      const { scene, camera, renderer, ro } = createBaseScene(container);
+      camera.position.set(0, 0, 11);
+
+      const group = new THREE.Group();
+      scene.add(group);
+
+      // Cell membrane
+      const membrane = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(3.2, 1),
+        new THREE.MeshStandardMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.18, wireframe: true })
+      );
+      group.add(membrane);
+
+      // Nucleus
+      const nucleus = new THREE.Mesh(
+        new THREE.SphereGeometry(1.05, 24, 24),
+        new THREE.MeshStandardMaterial({ color: 0x7c3aed, emissive: 0x7c3aed, emissiveIntensity: 0.3 })
+      );
+      group.add(nucleus);
+
+      // Organelles orbiting the nucleus
+      const organelles = [
+        { color: 0xf97316, size: 0.32, dist: 2.1, speed: 0.9, label: 'Mitochondria' },
+        { color: 0x22c55e, size: 0.26, dist: 2.5, speed: 0.6, label: 'Golgi apparatus' },
+        { color: 0xfacc15, size: 0.22, dist: 1.7, speed: 1.3, label: 'Ribosome' },
+        { color: 0x38bdf8, size: 0.3, dist: 2.8, speed: 0.4, label: 'ER' }
+      ].map(o => {
+        const mesh = new THREE.Mesh(
+          new THREE.SphereGeometry(o.size, 16, 16),
+          new THREE.MeshStandardMaterial({ color: o.color, emissive: o.color, emissiveIntensity: 0.35 })
+        );
+        group.add(mesh);
+        return { mesh, ...o, angle: Math.random() * Math.PI * 2 };
+      });
+
+      let raf, t = 0;
+      function animate() {
+        raf = requestAnimationFrame(animate);
+        t += 0.01;
+        group.rotation.y = t * 0.4;
+        organelles.forEach(o => {
+          o.angle += 0.01 * o.speed;
+          o.mesh.position.set(Math.cos(o.angle) * o.dist, Math.sin(o.angle * 0.7) * 0.6, Math.sin(o.angle) * o.dist);
+        });
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      return function cleanup() {
+        cancelAnimationFrame(raf);
+        if (ro) ro.disconnect();
+        renderer.dispose();
+        container.innerHTML = '';
+      };
+    }
+
+    const VIZ_REGISTRY = { dna: initDNAViz, cell: initCellViz };
+
+    /* =========================================================
+       5. HERO DNA HELIX (homepage background visual)
+       ========================================================= */
+    function initHeroDNA() {
+      const mount = document.getElementById('dna3d-canvas');
+      if (!mount || typeof THREE === 'undefined') return;
+      mount.style.height = mount.parentElement.clientHeight + 'px';
+      const cleanup = initDNAViz(mount);
+      // hero visual is decorative and never torn down
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initHeroDNA);
+    } else {
+      initHeroDNA();
+    }
+  </script>
+
+  <!-- JAVASCRIPT (your existing search / misc logic, if any) -->
+  <script src="./script.js"></script>
+
+</body>
+
+</html>
